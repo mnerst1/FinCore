@@ -1,0 +1,177 @@
+generator client {
+  provider = "prisma-client-js"
+}
+datasource db {
+  provider = "postgresql"
+  url = env("DATABASE_URL")
+}
+model User {
+  id String @id @default(cuid())
+  email String @unique
+  name String
+  passwordHash String
+  currency String @default("USD")
+  locale String @default("en")
+  theme String @default("system")
+  style String @default("clean")
+  accent String @default("#5765f2")
+  createdAt DateTime @default(now())
+  sessions Session[]
+  accounts Account[]
+  categories Category[]
+  transactions Transaction[]
+  budgets Budget[]
+  goals Goal[]
+  debts Debt[]
+  recurring Recurring[]
+  activities Activity[]
+  notifications Notification[]
+}
+model Session {
+  id String @id
+  userId String
+  user User @relation(fields:[userId],references:[id],onDelete:Cascade)
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+  @@index([userId])
+}
+model AuthAttempt {
+  id String @id
+  count Int @default(0)
+  resetAt DateTime
+}
+model Account {
+  id String @id @default(cuid())
+  userId String
+  user User @relation(fields:[userId],references:[id],onDelete:Cascade)
+  name String
+  kind String @default("bank")
+  openingBalance Decimal @db.Decimal(18,2)
+  color String @default("#5765f2")
+  transactions Transaction[] @relation("Source")
+  transfers Transaction[] @relation("Destination")
+  recurring Recurring[]
+  createdAt DateTime @default(now())
+  @@index([userId])
+}
+model Category {
+  id String @id @default(cuid())
+  userId String
+  user User @relation(fields:[userId],references:[id],onDelete:Cascade)
+  name String
+  kind String @default("expense")
+  color String @default("#5765f2")
+  parentId String?
+  parent Category? @relation("Tree",fields:[parentId],references:[id],onDelete:Restrict)
+  children Category[] @relation("Tree")
+  transactions Transaction[]
+  budgets Budget[]
+  recurring Recurring[]
+  @@index([userId])
+}
+model Transaction {
+  id String @id @default(cuid())
+  userId String
+  user User @relation(fields:[userId],references:[id],onDelete:Cascade)
+  accountId String
+  account Account @relation("Source",fields:[accountId],references:[id],onDelete:Restrict)
+  toAccountId String?
+  toAccount Account? @relation("Destination",fields:[toAccountId],references:[id],onDelete:Restrict)
+  categoryId String?
+  category Category? @relation(fields:[categoryId],references:[id],onDelete:Restrict)
+  kind String
+  amount Decimal @db.Decimal(18,2)
+  description String
+  date DateTime @db.Date
+  note String @default("")
+  recurringId String?
+  recurring Recurring? @relation(fields:[recurringId],references:[id],onDelete:SetNull)
+  debtId String?
+  debt Debt? @relation(fields:[debtId],references:[id],onDelete:Restrict)
+  attachments Attachment[]
+  createdAt DateTime @default(now())
+  @@unique([recurringId,date])
+  @@index([userId,date])
+}
+model Budget {
+  id String @id @default(cuid())
+  userId String
+  user User @relation(fields:[userId],references:[id],onDelete:Cascade)
+  categoryId String
+  category Category @relation(fields:[categoryId],references:[id],onDelete:Restrict)
+  month String
+  amount Decimal @db.Decimal(18,2)
+  @@unique([userId,categoryId,month])
+}
+model Goal {
+  id String @id @default(cuid())
+  userId String
+  user User @relation(fields:[userId],references:[id],onDelete:Cascade)
+  name String
+  target Decimal @db.Decimal(18,2)
+  saved Decimal @db.Decimal(18,2)
+  deadline DateTime? @db.Date
+  color String @default("#5765f2")
+  @@index([userId])
+}
+model Debt {
+  id String @id @default(cuid())
+  userId String
+  user User @relation(fields:[userId],references:[id],onDelete:Cascade)
+  name String
+  direction String
+  principal Decimal @db.Decimal(18,2)
+  remaining Decimal @db.Decimal(18,2)
+  interestRate Decimal @db.Decimal(7,2)
+  dueDate DateTime? @db.Date
+  transactions Transaction[]
+  @@index([userId])
+}
+model Recurring {
+  id String @id @default(cuid())
+  userId String
+  user User @relation(fields:[userId],references:[id],onDelete:Cascade)
+  accountId String
+  account Account @relation(fields:[accountId],references:[id],onDelete:Restrict)
+  categoryId String?
+  category Category? @relation(fields:[categoryId],references:[id],onDelete:Restrict)
+  kind String
+  amount Decimal @db.Decimal(18,2)
+  description String
+  frequency String
+  nextDate DateTime @db.Date
+  anchorDay Int
+  active Boolean @default(true)
+  transactions Transaction[]
+  @@index([userId,nextDate])
+}
+model Attachment {
+  id String @id @default(cuid())
+  transactionId String
+  transaction Transaction @relation(fields:[transactionId],references:[id],onDelete:Cascade)
+  filename String
+  storageKey String @unique
+  mime String
+  size Int
+}
+model Activity {
+  id String @id @default(cuid())
+  userId String
+  user User @relation(fields:[userId],references:[id],onDelete:Cascade)
+  action String
+  entity String
+  label String
+  createdAt DateTime @default(now())
+  @@index([userId,createdAt])
+}
+model Notification {
+  id String @id @default(cuid())
+  userId String
+  user User @relation(fields:[userId],references:[id],onDelete:Cascade)
+  key String
+  type String
+  label String
+  read Boolean @default(false)
+  createdAt DateTime @default(now())
+  @@unique([userId,key])
+}
