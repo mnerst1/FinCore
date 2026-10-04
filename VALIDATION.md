@@ -29,7 +29,7 @@ Follow-up verification: Docker Compose PostgreSQL 17 started successfully on thi
 
 Not independently verified: Firefox/Safari, every manual checklist item, full-server `pg_dump` restoration, a separate native-speaker review, deployment beyond loopback, large-load performance and a formal security audit. Additional 12 locale dictionaries intentionally contain a core translation with English fallback; Settings reports measured key coverage. No universal-language claim is made.
 
-No GitHub repository, remote deployment or external account was created. Runtime databases, receipts, environment secrets and generated dependencies are excluded from the deliverable ZIP.
+The project was published to the user's existing `mnerst1/FinCore` repository as part of the 15 Days of Code challenge. No remote application deployment was performed. Runtime databases, receipts, environment secrets and generated dependencies are excluded from Git and the deliverable ZIP.
 
 Demo sign-in follow-up: the login screen now offers a translated demo button without displaying credentials. Its server endpoint uses the configured demo password and the existing login validation, rate limiter and secure session flow. A browser test verified one-click demo login with empty form fields, Russian locale persistence and rejection of a foreign Origin. Lint, typecheck and unit tests passed.
 
